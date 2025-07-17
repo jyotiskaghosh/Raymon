@@ -3,7 +3,7 @@
 #include "../state_stack.h"
 #include "../UI/panel.h"
 #include "../main.h"
-#include "dialogue.h"
+#include "dialogue_state.h"
 
 #define PANEL (Rectangle){0, VIRTUAL_HEIGHT - 64, VIRTUAL_WIDTH, 64}
 

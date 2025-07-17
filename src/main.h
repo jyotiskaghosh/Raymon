@@ -17,8 +17,14 @@ typedef enum {
 } MusicID;
 
 typedef enum {
+	BLIP,
+	MAX_SOUNDS,
+} SoundID;
+
+typedef enum {
 	TILES,
 	PLAYER,
+	CURSOR,
 
 	AARDART_FRONT,
 	AARDART_BACK,

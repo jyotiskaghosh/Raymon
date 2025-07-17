@@ -16,12 +16,9 @@ typedef struct {
     char name[16];
     TextureID battleSpriteFront;
     TextureID battleSpriteBack;
-    int baseHP;
-    int baseAttack;
-    int baseDefense;
-    int baseSpeed;
-} Pokemon;
+    int baseHP, baseAttack, baseDefense, baseSpeed;
+} PokemonDef;
 
-void InitPokemon();
+void InitPokemonDef();
 
 #endif

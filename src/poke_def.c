@@ -1,11 +1,11 @@
 #include "poke_def.h"
 #include "main.h"
 
-extern Pokemon gPokemons[];
+extern PokemonDef gPokemons[];
 
-void InitPokemon()
+void InitPokemonDef()
 {
-    gPokemons[AARDART] = (Pokemon){
+    gPokemons[AARDART] = (PokemonDef){
         .name = "Aardart",
         .battleSpriteFront = AARDART_FRONT,
         .battleSpriteBack = AARDART_BACK,
@@ -15,7 +15,7 @@ void InitPokemon()
         .baseSpeed = 6
     };
 
-    gPokemons[AGNITE] = (Pokemon){
+    gPokemons[AGNITE] = (PokemonDef){
         .name = "Agnite",
         .battleSpriteFront = AGNITE_FRONT,
         .battleSpriteBack = AGNITE_BACK,
@@ -25,7 +25,7 @@ void InitPokemon()
         .baseSpeed = 7
     };
 
-    gPokemons[ANOLEAF] = (Pokemon){
+    gPokemons[ANOLEAF] = (PokemonDef){
         .name = "Anoleaf",
         .battleSpriteFront = ANOLEAF_FRONT,
         .battleSpriteBack = ANOLEAF_BACK,
@@ -35,7 +35,7 @@ void InitPokemon()
         .baseSpeed = 6
     };
 
-    gPokemons[BAMBOON] = (Pokemon){
+    gPokemons[BAMBOON] = (PokemonDef){
         .name = "Bamboom",
         .battleSpriteFront = BAMBOON_FRONT,
         .battleSpriteBack = BAMBOON_BACK,
@@ -45,7 +45,7 @@ void InitPokemon()
         .baseSpeed = 7
     };
 
-    gPokemons[CARDIWING] = (Pokemon){
+    gPokemons[CARDIWING] = (PokemonDef){
         .name = "Cardiwing",
         .battleSpriteFront = CARDIWING_FRONT,
         .battleSpriteBack = CARDIWING_BACK,

@@ -19,7 +19,7 @@ typedef enum {
 } PlayerState;
 
 typedef struct {
-    Pokemon pokemon;
+    PokemonDef pokemon;
     float x, y;
     Direction direction;
     PlayerState state;    

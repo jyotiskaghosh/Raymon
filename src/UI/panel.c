@@ -1,7 +1,7 @@
 #include "panel.h"
 
-void PanelRender(Rectangle rect)
+void PanelRender(Rectangle bounds)
 {
-    DrawRectangleRec(rect, (Color){56, 56, 56, 255});
-    DrawRectangleLinesEx(rect, 2, WHITE);
+    DrawRectangleRec(bounds, (Color){56, 56, 56, 255});
+    DrawRectangleLinesEx(bounds, 2, WHITE);
 }

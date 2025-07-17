@@ -3,6 +3,6 @@
 
 #include <raylib.h>
 
-void PanelRender(Rectangle rect);
+void PanelRender(Rectangle bounds);
 
 #endif

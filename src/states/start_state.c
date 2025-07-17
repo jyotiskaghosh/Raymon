@@ -9,7 +9,7 @@ extern GameState overworldState;
 extern Transition fadeTransition;
 extern Music gMusic[];
 extern Texture2D gTextures[];
-extern Pokemon gPokemons[];
+extern PokemonDef gPokemons[];
 
 static int frameCounter;
 static int animationFrameCounter;
