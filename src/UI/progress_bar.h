@@ -6,7 +6,7 @@
 typedef struct {
     Rectangle bounds;
     Color color;
-    int value;
+    int *value;
     int max;
 } ProgressBar;
 

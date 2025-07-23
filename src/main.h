@@ -13,11 +13,15 @@ typedef enum {
 	INTRO_MUSIC,
 	FIELD_MUSIC,
 	BATTLE_MUSIC,
+	VICTORY_MUSIC,
 	MAX_MUSIC
 } MusicID;
 
 typedef enum {
-	BLIP,
+	BLIP_SOUND,
+	POWERUP_SOUND,
+	HIT_SOUND,
+	RUN_SOUND,
 	MAX_SOUNDS,
 } SoundID;
 
@@ -38,5 +42,10 @@ typedef enum {
 	CARDIWING_BACK,
 	MAX_TEXTURES,
 } TextureID;
+
+typedef enum {
+	BLINK,
+	MAX_SHADERS
+} ShaderID;
 
 #endif

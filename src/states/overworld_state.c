@@ -3,12 +3,10 @@
 #include "../music.h"
 #include "../main.h"
 #include "../entities/player.h"
+#include "../globals.h"
 
 #define GRASS_TILE (Rectangle){5 * TILE_SIZE, 5 * TILE_SIZE, TILE_SIZE, TILE_SIZE}
 #define TALL_GRASS_TILE (Rectangle){TILE_SIZE, 5 * TILE_SIZE, TILE_SIZE, TILE_SIZE}
-
-extern Texture2D gTextures[];
-extern Music gMusic[];
 
 static void OverworldStateInit(void *data) 
 {

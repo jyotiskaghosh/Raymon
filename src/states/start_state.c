@@ -4,12 +4,9 @@
 #include "../music.h"
 #include "../main.h"
 #include "../poke_def.h"
-
-extern GameState overworldState;
-extern Transition fadeTransition;
-extern Music gMusic[];
-extern Texture2D gTextures[];
-extern PokemonDef gPokemons[];
+#include "../globals.h"
+#include "states.h"
+#include "../transitions/transitions.h"
 
 static int frameCounter;
 static int animationFrameCounter;

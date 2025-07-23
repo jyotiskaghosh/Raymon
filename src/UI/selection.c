@@ -1,22 +1,19 @@
 #include "selection.h"
 #include "panel.h"
-
 #include "../main.h"
-
-extern Texture2D gTextures[];
-extern Sound gSounds[];
+#include "../globals.h"
 
 void SelectionUpdate(Selection *select)
 {
     if (IsKeyPressed(KEY_UP) && select->currentSelection != 0) {
         select->currentSelection--;
-        PlaySound(gSounds[BLIP]);
+        PlaySound(gSounds[BLIP_SOUND]);
     } else if (IsKeyPressed(KEY_DOWN) && select->currentSelection < select->itemsLength) {
         select->currentSelection++;
-        PlaySound(gSounds[BLIP]);
+        PlaySound(gSounds[BLIP_SOUND]);
     } else if (IsKeyPressed(KEY_X)) {
         select->items[select->currentSelection].onSelect();
-        PlaySound(gSounds[BLIP]);
+        PlaySound(gSounds[BLIP_SOUND]);
     }
 }
 

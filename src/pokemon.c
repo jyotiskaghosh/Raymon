@@ -1,7 +1,6 @@
 #include "pokemon.h"
 #include "poke_def.h"
-
-extern PokemonDef gPokemons[];
+#include "globals.h"
 
 void PokeInit(Pokemon *mon, int ID)
 {

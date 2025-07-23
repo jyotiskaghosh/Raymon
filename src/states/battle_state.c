@@ -1,4 +1,4 @@
-#include <raylib.h>
+#include <raylib.h> 
 #include <stdio.h>
 #include "../state_stack.h"
 #include "../UI/panel.h"
@@ -9,6 +9,9 @@
 #include "../transition.h"
 #include "../UI/progress_bar.h"
 #include "../UI/selection.h"
+#include "../battle/battle_sprite.h"
+#include "../globals.h"
+#include "../transitions/transitions.h"
 
 #define PANEL (Rectangle){0, VIRTUAL_HEIGHT - 64, VIRTUAL_WIDTH, 64}
 
@@ -18,16 +21,29 @@ typedef enum {
     OPENING_TEXT2,
     BATTLE_MENU,
     RUN,
+    PLAYER_MOVE,
+    OPPONENT_MOVE,
+    VICTORY,
+    DEFEAT
 } State;
 
+typedef enum {
+    ATTACK_START,
+    ATTACK_ANIM,
+    ATTACK_DAMAGE,
+    ATTACK_DONE
+} AttackState;
+
 static State state;
+static AttackState attackState;
+
 static int frameCounter;
 
 extern Pokemon playerPokemon;
 static Pokemon opponentPokemon;
 
-static Vector2 playerSpritePos;
-static Vector2 opponentSpritePos;
+static BattleSprite playerPokemonSprite;
+static BattleSprite opponentPokemonSprite;
 
 static float playerCircleX;
 static float opponentCircleX;
@@ -39,13 +55,21 @@ static char renderHealthBars;
 
 static Selection menu;
 
-extern PokemonDef gPokemons[];
-extern Texture2D gTextures[];
-extern Music gMusic[];
+static int damage;
+static int moveCounter;
 
-extern Transition fadeTransition;
+static void onSelectFight() { 
+    Pokemon *attacker, *defender;
+    if (playerPokemon.speed > opponentPokemon.speed) {
+        state = PLAYER_MOVE;
+    } else if (opponentPokemon.speed > playerPokemon.speed) {
+        state = OPPONENT_MOVE;
+    } else {
+        if (GetRandomValue(0, 1) == 0) state = PLAYER_MOVE;
+        else state = OPPONENT_MOVE;
+    }
+}; 
 
-static void onSelectFight() {}; 
 static void onSelectRun() { state = RUN; };
 
 static void BattleStateInit(void *data) 
@@ -54,14 +78,18 @@ static void BattleStateInit(void *data)
     
     PokeInit(&opponentPokemon, GetRandomValue(0, MAX_POKEMONS - 1));
 
-    playerSpritePos = (Vector2){
+    playerPokemonSprite = (BattleSprite){
+        .ID = gPokemons[playerPokemon.ID].battleSpriteBack,
         .x = -64,
-        .y = VIRTUAL_HEIGHT - 128
+        .y = VIRTUAL_HEIGHT - 128,
+        .opacity = 255
     };
 
-    opponentSpritePos = (Vector2){
+    opponentPokemonSprite = (BattleSprite){
+        .ID = gPokemons[opponentPokemon.ID].battleSpriteFront,
         .x = VIRTUAL_WIDTH,
-        .y = 8
+        .y = 8,
+        .opacity = 255
     };
 
     playerCircleX = -68;    
@@ -75,7 +103,7 @@ static void BattleStateInit(void *data)
             .height = 6
         },
         .color = (Color){189, 32, 32, 255},
-        .value = playerPokemon.HP,
+        .value = &playerPokemon.HP,
         .max = gPokemons[playerPokemon.ID].baseHP
     };
 
@@ -87,7 +115,7 @@ static void BattleStateInit(void *data)
             .height = 6
         },
         .color = (Color){189, 32, 32, 255},
-        .value = opponentPokemon.HP,
+        .value = &opponentPokemon.HP,
         .max = gPokemons[opponentPokemon.ID].baseHP
     };
 
@@ -101,8 +129,14 @@ static void BattleStateInit(void *data)
     };
 
     state = SLIDE_IN;
+    attackState = ATTACK_START;
     frameCounter = 0;
     renderHealthBars = 0;
+    moveCounter = 0;
+}
+
+static int Damage(Pokemon attacker, Pokemon defender) {
+    damage = (attacker.attack - defender.defense) > 1 ? (attacker.attack - defender.defense) : 1;
 }
 
 static void callback() { PopState(); }
@@ -110,16 +144,16 @@ static void callback() { PopState(); }
 static void BattleStateUpdate()
 {
 #define SLIDE_IN_FRAMES 60
-    
-    if (state == SLIDE_IN && frameCounter++ > SLIDE_IN_FRAMES) {
-        state = OPENING_TEXT1;
-        renderHealthBars = 1;
-    }
-
     switch (state) {
     case SLIDE_IN:
-        opponentSpritePos.x -= 96.0f/SLIDE_IN_FRAMES;
-        playerSpritePos.x += 96.0f/SLIDE_IN_FRAMES;
+        if (frameCounter++ > SLIDE_IN_FRAMES) {
+            state = OPENING_TEXT1;
+            renderHealthBars = 1;
+            frameCounter = 0;
+        }
+
+        opponentPokemonSprite.x -= 96.0f/SLIDE_IN_FRAMES;
+        playerPokemonSprite.x += 96.0f/SLIDE_IN_FRAMES;
         opponentCircleX -= 102.0f/SLIDE_IN_FRAMES;
         playerCircleX += 134.0f/SLIDE_IN_FRAMES;
         break;
@@ -135,7 +169,166 @@ static void BattleStateUpdate()
         SelectionUpdate(&menu);
         break;
     case RUN:
+        if (frameCounter++ == 0) PlaySound(gSounds[RUN_SOUND]);
+        
         StartTransition(&fadeTransition, callback);
+        
+        break;
+    case PLAYER_MOVE:
+        switch (attackState) {
+        case ATTACK_START:
+            if (frameCounter == 0) {
+                damage = Damage(playerPokemon, opponentPokemon);
+            }
+
+            if (frameCounter == 60) {
+                attackState = ATTACK_ANIM;
+                frameCounter = 0;
+            }
+
+            frameCounter++;
+            break;
+        case ATTACK_ANIM:
+            if (frameCounter == 0) PlaySound(gSounds[POWERUP_SOUND]);
+
+            if (frameCounter <= 60 && frameCounter % 10 == 0)
+                playerPokemonSprite.blink = !playerPokemonSprite.blink;
+
+            if (frameCounter == 60) PlaySound(gSounds[HIT_SOUND]);
+
+            if (frameCounter > 60 && frameCounter % 10 == 0)
+                opponentPokemonSprite.opacity = opponentPokemonSprite.opacity == 64 ? 255 : 64;
+
+            if (frameCounter == 120) {
+                attackState = ATTACK_DAMAGE;
+                frameCounter = 0;
+                break;
+            }
+
+            frameCounter++;
+            break;
+        case ATTACK_DAMAGE:
+            if (frameCounter++ == damage) {
+                attackState = ATTACK_DONE;
+                frameCounter = 0;
+                break;
+            }
+            
+            if (--opponentPokemon.HP == 0) {
+                state = VICTORY; 
+                frameCounter = 0; 
+            }
+
+            break;
+        case ATTACK_DONE:
+            if (++moveCounter == 2) {
+                state = BATTLE_MENU;
+                attackState = ATTACK_START;    
+                moveCounter = 0;
+                
+                break;
+            }
+
+            state = OPPONENT_MOVE;
+            attackState = ATTACK_START;
+            break;
+        default:
+            break;
+        }
+
+        break;
+    case OPPONENT_MOVE:
+       switch (attackState) {
+        case ATTACK_START:
+            if (frameCounter == 0) {
+                damage = Damage(opponentPokemon, playerPokemon);
+            }
+
+            if (frameCounter == 60) {
+                attackState = ATTACK_ANIM;
+                frameCounter = 0;
+            }
+
+            frameCounter++;
+            break;
+        case ATTACK_ANIM:
+            if (frameCounter == 0) PlaySound(gSounds[POWERUP_SOUND]);
+
+            if (frameCounter <= 60 && frameCounter % 10 == 0)
+                opponentPokemonSprite.blink = !opponentPokemonSprite.blink;
+
+            if (frameCounter == 60) PlaySound(gSounds[HIT_SOUND]);
+
+            if (frameCounter > 60 && frameCounter % 10 == 0)
+                playerPokemonSprite.opacity = playerPokemonSprite.opacity == 64 ? 255 : 64;
+
+            if (frameCounter == 120) {
+                attackState = ATTACK_DAMAGE;
+                frameCounter = 0;
+                break;
+            }
+
+            frameCounter++;
+            break;
+        case ATTACK_DAMAGE:
+            if (frameCounter++ == damage) {
+                attackState = ATTACK_DONE;
+                frameCounter = 0;
+                break;
+            }
+            
+            if (--playerPokemon.HP == 0) {
+                state = DEFEAT; 
+                frameCounter = 0; 
+            }
+
+            break;
+        case ATTACK_DONE:
+            if (++moveCounter == 2) {
+                state = BATTLE_MENU;
+                attackState = ATTACK_START;    
+                moveCounter = 0;
+                
+                break;
+            }
+
+            state = PLAYER_MOVE;
+            attackState = ATTACK_START;
+            break;
+        default:
+            break;
+        }
+
+        break;
+    case VICTORY:
+        if (IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_X))
+            StartTransition(&fadeTransition, callback);
+
+        if (frameCounter == 0) {
+            StopMusic();
+            PlayMusic(gMusic[VICTORY_MUSIC]);
+        }
+
+        if (frameCounter == 20)
+            break;
+        
+        opponentPokemonSprite.y += (VIRTUAL_HEIGHT - 8) / 20;
+
+        frameCounter++;
+        break;
+    case DEFEAT:
+        if (IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_X))
+            StartTransition(&fadeTransition, callback);
+
+        if (frameCounter == 0)
+            StopMusic();
+
+        if (frameCounter == 20)
+            break;
+        
+        playerPokemonSprite.y += 128 / 20;
+
+        frameCounter++;
         break;
     default:
         break;
@@ -149,9 +342,9 @@ static void BattleStateRender()
     DrawEllipse(opponentCircleX, 60, 72, 24, (Color){45, 184, 45, 124});
     DrawEllipse(playerCircleX, VIRTUAL_HEIGHT - 64, 72, 24, (Color){45, 184, 45, 124});
 
-    DrawTexture(gTextures[gPokemons[opponentPokemon.ID].battleSpriteFront], opponentSpritePos.x, opponentSpritePos.y, WHITE);
-    DrawTexture(gTextures[gPokemons[playerPokemon.ID].battleSpriteBack], playerSpritePos.x, playerSpritePos.y, WHITE);
-
+    BattleSpriteRender(playerPokemonSprite);
+    BattleSpriteRender(opponentPokemonSprite);
+    
     PanelRender(PANEL);
 
     if (renderHealthBars) {
@@ -174,8 +367,56 @@ static void BattleStateRender()
     case BATTLE_MENU:
         SelectionRender(&menu);
         break;
-    case RUN:
+    case RUN:   
         DrawText("Fled successfully.", 8, VIRTUAL_HEIGHT - 64 + 8, 16, WHITE);
+        break;
+    case PLAYER_MOVE:
+        switch (attackState) {
+        case ATTACK_START:
+            sprintf(str, "%s attacks %s!", gPokemons[playerPokemon.ID].name, gPokemons[opponentPokemon.ID].name);
+            DrawText(str, 8, VIRTUAL_HEIGHT - 64 + 8, 16, WHITE);
+            break;
+        case ATTACK_ANIM:
+
+            break;
+        case ATTACK_DAMAGE:
+            
+            break;
+        case ATTACK_DONE:
+            
+            break;
+        default:
+            break;
+        }
+
+        break;
+    case OPPONENT_MOVE:
+        switch (attackState) {
+        case ATTACK_START:
+            sprintf(str, "%s attacks %s!", gPokemons[opponentPokemon.ID].name, gPokemons[playerPokemon.ID].name);
+            DrawText(str, 8, VIRTUAL_HEIGHT - 64 + 8, 16, WHITE);
+            break;
+        case ATTACK_ANIM:
+
+            break;
+        case ATTACK_DAMAGE:
+            
+            break;
+        case ATTACK_DONE:
+            
+            break;
+        default:
+            break;
+        }
+
+        break;
+    case VICTORY:
+        DrawText("Victory!", 8, VIRTUAL_HEIGHT - 64 + 8, 16, WHITE);
+        
+        break;
+    case DEFEAT:
+        DrawText("You fainted!", 8, VIRTUAL_HEIGHT - 64 + 8, 16, WHITE);
+        
         break;
     default:
         break;

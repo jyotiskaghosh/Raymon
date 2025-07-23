@@ -4,16 +4,22 @@
 #include "transition.h"
 #include "poke_def.h"
 #include "pokemon.h"
+#include "states/states.h"
+
+#if defined(PLATFORM_DESKTOP)
+    #define GLSL_VERSION            330
+#else   // PLATFORM_ANDROID, PLATFORM_WEB
+    #define GLSL_VERSION            100
+#endif
 
 Music gMusic[MAX_MUSIC];
 Sound gSounds[MAX_SOUNDS];
 Texture2D gTextures[MAX_TEXTURES];
+Shader gShaders[MAX_SHADERS];
 PokemonDef gPokemons[MAX_POKEMONS];
 
 Pokemon playerPokemon;
 Music currentMusic;
-
-extern GameState startState;
 
 static void InitGame()
 {
@@ -25,8 +31,12 @@ static void InitGame()
 	gMusic[INTRO_MUSIC] = LoadMusicStream("resources/audio/intro.mp3");
 	gMusic[FIELD_MUSIC] = LoadMusicStream("resources/audio/field_music.wav");
 	gMusic[BATTLE_MUSIC] = LoadMusicStream("resources/audio/battle_music.mp3");
+	gMusic[VICTORY_MUSIC] = LoadMusicStream("resources/audio/victory.wav");
 
-	gSounds[BLIP] = LoadSound("resources/audio/blip.wav");
+	gSounds[BLIP_SOUND] = LoadSound("resources/audio/blip.wav");
+	gSounds[POWERUP_SOUND] = LoadSound("resources/audio/powerup.wav");
+	gSounds[HIT_SOUND] = LoadSound("resources/audio/hit.wav");
+	gSounds[RUN_SOUND] = LoadSound("resources/audio/run.wav");
 
 	// Textures
 	gTextures[TILES] = LoadTexture("resources/graphics/sheet.png");
@@ -47,6 +57,9 @@ static void InitGame()
 
 	gTextures[CARDIWING_FRONT] = LoadTexture("resources/graphics/pokemon/cardiwing-front.png");
 	gTextures[CARDIWING_BACK] = LoadTexture("resources/graphics/pokemon/cardiwing-back.png");
+
+	// shaders
+	gShaders[BLINK] = LoadShader(0 ,TextFormat("resources/shaders/blink.fs", GLSL_VERSION));
 }
 
 static void UnloadGame()
@@ -59,6 +72,9 @@ static void UnloadGame()
 
 	for (int i = 0; i < MAX_TEXTURES; i++)
 		UnloadTexture(gTextures[i]);
+
+	for (int i = 0; i < MAX_SHADERS; i++)
+		UnloadShader(gShaders[i]);
 }
 
 int main()

@@ -2,6 +2,9 @@
 #include <raylib.h>
 #include "../transition.h"
 #include "../state_stack.h"
+#include "../globals.h"
+#include "../states/states.h"
+#include "../transitions/transitions.h"
 
 #define FRAMES 30
 
@@ -9,11 +12,6 @@
 #define PLAYER_TILE_HEIGHT 48
 
 Player player;
-
-extern Texture2D gTextures[];
-
-extern Transition fadeTransition;
-extern GameState battleState;
 
 static int frameCounter;
 
